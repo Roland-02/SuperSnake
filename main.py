@@ -17,14 +17,52 @@ font_style = pygame.font.SysFont('Arial', 30)
 score_font = pygame.font.SysFont('comicsansms', 35)
 
 
+class Food:
+    def __init__(self, color, x, y):
+        self.color = color
+        self.x = x
+        self.y = y
+
+    def position(self, ex, why):
+        self.x = ex
+        self.y = why
+
+
+apple = Food('red', 0, 0)
+grape = Food('green', 0, 0)
+orange = Food('orange', 0, 0)
+eggplant = Food('purple', 0, 0)
+banana = Food('yellow', 0, 0)
+
+foods = [apple, grape, orange, eggplant, banana]
+
+
+def placeFood():
+    x = round(random.randrange(0, (screen_width - snake_block)))
+    y = round(random.randrange(0, (screen_height - snake_block)))
+    return x, y
+
+
+def genFood():
+    # pick 3 random foods and generate coordinates
+    sample = random.sample(foods, 3)
+
+    for food in sample:
+        food.position(placeFood()[0], placeFood()[1])
+        print(food.color + ': ' + str(food.x) + ',' + str(food.y))
+        pygame.draw.rect(screen, food.color, [food.x, food.y, snake_block, snake_block])
+
+    return sample
+
+
 def addSnake(block, lit):
     for x in lit:
-        pygame.draw.rect(screen, 'green', [x[0], x[1], block, block])
+        pygame.draw.rect(screen, 'black', [x[0], x[1], block, block])
 
 
 def setScore(score):
     value = score_font.render('Score: ' + str(score), True, 'orange')
-    screen.blit(value, [0,0])
+    screen.blit(value, [0, 0])
 
 
 def message(msg, color):
@@ -34,6 +72,13 @@ def message(msg, color):
 
 def distance(x1, y1, x2, y2):
     return abs(x1 - x2) + abs(y1 - y2)
+
+
+def check_collision(snake_head, food):
+    if distance(snake_head[0], snake_head[1], food.x, food.y) <= 25:
+        # food.position(placeFood()[0], placeFood()[1])
+        return True
+    return False
 
 
 def gameLoop():
@@ -48,9 +93,6 @@ def gameLoop():
 
     snake_List = []
     snake_length = 1
-
-    foodx = round(random.randrange(0, (screen_width - snake_block)))
-    foody = round(random.randrange(0, (screen_height - snake_block)))
 
     while not game_over:
 
@@ -103,9 +145,11 @@ def gameLoop():
             y = 0
 
         screen.fill('white')
-        pygame.draw.rect(screen, 'green', [x, y, snake_block, snake_block])
-        pygame.draw.rect(screen, 'red', [foodx, foody, snake_block, snake_block])
+        pygame.draw.rect(screen, 'black', [x, y, snake_block, snake_block])
 
+        foods = genFood()
+
+        target = banana
         snake_head = [x, y]
         snake_List.append(snake_head)
 
@@ -117,16 +161,14 @@ def gameLoop():
                 game_close = True
 
         addSnake(snake_block, snake_List)
-        setScore((snake_length - 1) * 10)
-
+        setScore((snake_length - 1))
 
         pygame.display.update()
 
-        # food collision detection
-        if distance(snake_head[0], snake_head[1], foodx, foody) <= 25:
-            foodx = round(random.randrange(0, (screen_width - snake_block)))
-            foody = round(random.randrange(0, (screen_height - snake_block)))
-            snake_length += 1
+        for food in foods:
+            if check_collision(snake_head, target):
+                snake_length += 1
+                foods = genFood()
 
         clock.tick(snake_speed)
 
