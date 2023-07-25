@@ -18,6 +18,8 @@ font_style = pygame.font.SysFont('Arial', 30)
 score_font = pygame.font.SysFont('comicsansms', 25)
 hs_font = pygame.font.SysFont('comicsansms', 15)
 
+#level = 1
+
 
 class Food:
     def __init__(self, color, x, y):
@@ -59,9 +61,9 @@ def placeFood():
     return x, y
 
 
-def genFood():
-    # pick 3 random foods and generate coordinates
-    sample = random.sample(foods, 3)
+def genFood(level):
+    # spawn x random foods
+    sample = random.sample(foods, level)
 
     for food in sample:
         food.set_position(placeFood()[0], placeFood()[1])
@@ -102,6 +104,7 @@ def check_collision(snake_head, food):
 
 
 def gameLoop():
+    level = 1
     game_over = False
     game_close = False
 
@@ -114,7 +117,7 @@ def gameLoop():
     snake_List = []
     snake_length = 1
 
-    feed = genFood()
+    feed = genFood(level)
     target = random.choice(feed)
     pygame.draw.rect(screen, target.color, [0, 0, snake_block, snake_block])
 
@@ -197,13 +200,19 @@ def gameLoop():
             if check_collision(snake_head, food):
                 if food == target:
                     snake_length += 1
-                    feed = genFood()
+                    feed = genFood(level)
                     target = random.choice(feed)
+
                     if (snake_length-1) > get_highscore():
                         new_highscore(snake_length-1)
                         setScore((snake_length - 1), hs)
-                else:
 
+                    elif (snake_length-1) % 7 == 0:  # Check if points is a multiple of 7
+                        if level < 7:
+                            level += 1
+                        print(str(level))
+
+                else:
                     game_close = True
 
         pygame.display.update()
