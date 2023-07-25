@@ -1,5 +1,6 @@
 import pygame
 import random
+import ptext
 
 pygame.init()
 
@@ -11,10 +12,11 @@ pygame.display.set_caption('Super Snake')
 
 clock = pygame.time.Clock()
 snake_speed = 10
-snake_block = 20
+snake_block = 21
 
 font_style = pygame.font.SysFont('Arial', 30)
-score_font = pygame.font.SysFont('comicsansms', 35)
+score_font = pygame.font.SysFont('comicsansms', 25)
+hs_font = pygame.font.SysFont('comicsansms', 15)
 
 
 class Food:
@@ -23,7 +25,7 @@ class Food:
         self.x = x
         self.y = y
 
-    def position(self, ex, why):
+    def set_position(self, ex, why):
         self.x = ex
         self.y = why
 
@@ -31,10 +33,24 @@ class Food:
 apple = Food('red', 0, 0)
 grape = Food('green', 0, 0)
 orange = Food('orange', 0, 0)
-eggplant = Food('purple', 0, 0)
+plum = Food('purple', 0, 0)
 banana = Food('yellow', 0, 0)
+berry = Food('blue', 0, 0)
+pink = Food('pink', 0, 0)
 
-foods = [apple, grape, orange, eggplant, banana]
+foods = [apple, grape, orange, plum, banana, berry, pink]
+
+
+def get_highscore():
+    file = open('highScore.txt', 'r')
+    hs = file.readline()
+    file.close()
+    return int(hs)
+
+
+def new_highscore(score):
+    file = open('highScore.txt', 'w')
+    file.write(str(score))
 
 
 def placeFood():
@@ -48,26 +64,31 @@ def genFood():
     sample = random.sample(foods, 3)
 
     for food in sample:
-        food.position(placeFood()[0], placeFood()[1])
-        print(food.color + ': ' + str(food.x) + ',' + str(food.y))
+        food.set_position(placeFood()[0], placeFood()[1])
         pygame.draw.rect(screen, food.color, [food.x, food.y, snake_block, snake_block])
 
     return sample
 
 
-def addSnake(block, lit):
+def addSnake(block, lit, color):
     for x in lit:
-        pygame.draw.rect(screen, 'black', [x[0], x[1], block, block])
+        pygame.draw.rect(screen, color, [x[0], x[1], block, block])
 
 
-def setScore(score):
-    value = score_font.render('Score: ' + str(score), True, 'orange')
-    screen.blit(value, [0, 0])
+def setScore(score, hscore):
+    score_value = score_font.render('Score: ' + str(score), True, 'white')
+    screen.blit(score_value, [0, 0])
+
+    hs_value = hs_font.render('High-score: ' + str(hscore), True, 'white')
+    screen.blit(hs_value, [0, hs_value.get_height()+7])
 
 
-def message(msg, color):
-    mess = font_style.render(msg, True, color)
-    screen.blit(mess, [screen_width / 6, screen_height / 3])
+def you_Lost(score):
+    num = font_style.render("SCORE: " + str(score), True, 'red')
+    press = font_style.render("PRES Q TO QUIT OR P TO PLAY AGAIN", True, 'red')
+
+    screen.blit(num, [screen_width / 10, screen_height / 2.5])
+    screen.blit(press, [screen_width / 10, screen_height / 2])
 
 
 def distance(x1, y1, x2, y2):
@@ -76,7 +97,6 @@ def distance(x1, y1, x2, y2):
 
 def check_collision(snake_head, food):
     if distance(snake_head[0], snake_head[1], food.x, food.y) <= 25:
-        # food.position(placeFood()[0], placeFood()[1])
         return True
     return False
 
@@ -94,12 +114,20 @@ def gameLoop():
     snake_List = []
     snake_length = 1
 
+    feed = genFood()
+    target = random.choice(feed)
+    pygame.draw.rect(screen, target.color, [0, 0, snake_block, snake_block])
+
     while not game_over:
+        hs = get_highscore()
 
         # menu
         while game_close:
-            screen.fill('white')
-            message("You lost! Press Q to quit or P to play again", 'red')
+            screen.fill('black')
+
+            # msg = 'You lost!, Score:' + str(snake_length) + ' Press Q to quit or P to play again'
+            you_Lost(snake_length - 1)
+
             pygame.display.update()
 
             for event in pygame.event.get():
@@ -110,8 +138,8 @@ def gameLoop():
                     if event.key == pygame.K_p:
                         gameLoop()
 
-        # quit game
         for event in pygame.event.get():
+            # quit game
             if event.type == pygame.QUIT:
                 game_over = True
 
@@ -144,12 +172,15 @@ def gameLoop():
         elif y >= 600:
             y = 0
 
-        screen.fill('white')
-        pygame.draw.rect(screen, 'black', [x, y, snake_block, snake_block])
+        screen.fill('black')
+        addSnake(snake_block, snake_List, target.color)
+        setScore((snake_length - 1), hs)
 
-        foods = genFood()
+        for food in feed:
+            pygame.draw.rect(screen, food.color, [food.x, food.y, snake_block, snake_block])
 
-        target = banana
+        pygame.display.update()
+
         snake_head = [x, y]
         snake_List.append(snake_head)
 
@@ -160,16 +191,22 @@ def gameLoop():
             if i == snake_head:
                 game_close = True
 
-        addSnake(snake_block, snake_List)
-        setScore((snake_length - 1))
-
         pygame.display.update()
 
-        for food in foods:
-            if check_collision(snake_head, target):
-                snake_length += 1
-                foods = genFood()
+        for food in feed:
+            if check_collision(snake_head, food):
+                if food == target:
+                    snake_length += 1
+                    feed = genFood()
+                    target = random.choice(feed)
+                    if (snake_length-1) > get_highscore():
+                        new_highscore(snake_length-1)
+                        setScore((snake_length - 1), hs)
+                else:
 
+                    game_close = True
+
+        pygame.display.update()
         clock.tick(snake_speed)
 
     pygame.quit()
