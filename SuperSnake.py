@@ -1,6 +1,5 @@
 import pygame
 import random
-import ptext
 
 pygame.init()
 
@@ -18,8 +17,6 @@ font_style = pygame.font.SysFont('Arial', 30)
 score_font = pygame.font.SysFont('comicsansms', 25)
 hs_font = pygame.font.SysFont('comicsansms', 15)
 
-#level = 1
-
 
 class Food:
     def __init__(self, color, x, y):
@@ -35,24 +32,37 @@ class Food:
 apple = Food('red', 0, 0)
 grape = Food('green', 0, 0)
 orange = Food('orange', 0, 0)
-plum = Food('purple', 0, 0)
+plum = Food('magenta', 0, 0)
 banana = Food('yellow', 0, 0)
-berry = Food('blue', 0, 0)
+berry = Food('cyan', 0, 0)
 pink = Food('pink', 0, 0)
+brownie = Food('dimgrey', 0, 0)
+chalk = Food('white', 0, 0)
+blue = Food('blue', 0, 0)
 
-foods = [apple, grape, orange, plum, banana, berry, pink]
+
+foods = [apple, grape, orange, plum, banana, berry, pink, brownie, chalk, blue]
 
 
 def get_highscore():
-    file = open('highScore.txt', 'r')
-    hs = file.readline()
-    file.close()
-    return int(hs)
+    try:
+        with open('highScore.txt', 'r') as file:
+            hs = file.readline()
+            return int(hs)
+    except FileNotFoundError:
+        # If the file is not found, return a default high score of 0
+        return 0
 
 
 def new_highscore(score):
-    file = open('highScore.txt', 'w')
-    file.write(str(score))
+    try:
+        with open('highScore.txt', 'w') as file:
+            file.write(str(score))
+            file.close()
+    except FileNotFoundError:
+        # If the file is not found, return a default high score of 0
+        return 0
+
 
 
 def placeFood():
@@ -207,8 +217,8 @@ def gameLoop():
                         new_highscore(snake_length-1)
                         setScore((snake_length - 1), hs)
 
-                    elif (snake_length-1) % 7 == 0:  # Check if points is a multiple of 7
-                        if level < 7:
+                    elif (snake_length-1) % 1 == 0:  # Check if points is a multiple of 7
+                        if level < 10:
                             level += 1
                         print(str(level))
 
