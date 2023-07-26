@@ -217,7 +217,7 @@ def gameLoop():
                         new_highscore(snake_length-1)
                         setScore((snake_length - 1), hs)
 
-                    elif (snake_length-1) % 1 == 0:  # Check if points is a multiple of 7
+                    elif (snake_length-1) % 10 == 0:  # Check if points is a multiple of 7
                         if level < 10:
                             level += 1
                         print(str(level))
