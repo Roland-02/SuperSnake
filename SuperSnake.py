@@ -220,7 +220,6 @@ def gameLoop():
                     elif (snake_length-1) % 10 == 0:  # Check if points is a multiple of 7
                         if level < 10:
                             level += 1
-                        print(str(level))
 
                 else:
                     game_close = True
